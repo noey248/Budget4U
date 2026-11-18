@@ -1,3 +1,4 @@
+import { BudgetCharts, poolColors } from './BudgetCharts.jsx'
 import React, { useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ActionIcon, Alert, Button, MantineProvider, Modal, NativeSelect, TextInput, Textarea, createTheme } from '@mantine/core'
@@ -163,6 +164,15 @@ function App() {
     }
   }
 
+  const spendingByPool = new Map()
+  for (const expense of month.expenses) {
+    spendingByPool.set(expense.poolId, (spendingByPool.get(expense.poolId) ?? 0) + expense.amount)
+  }
+  const poolSummaries = month.pools.map((pool, index) => ({
+    ...pool,
+    spent: spendingByPool.get(pool.id) ?? 0,
+    color: poolColors[index % poolColors.length],
+  }))
   const expenseList = [...month.expenses].sort((a, b) => b.date.localeCompare(a.date))
   const stats = [
     ['Monthly income', month.income, ArrowDownLeft, 'Edit income'],
@@ -210,13 +220,14 @@ function App() {
             {amount < 0 && <div className="negative warning"><CircleAlert size={14} /> Over monthly income</div>}
           </article>)}
         </section>
+        <BudgetCharts pools={poolSummaries} spent={spent} />
         <section className="panel" aria-labelledby="pools-heading">
           <div className="panel-head"><div><h2 id="pools-heading">Budget pools</h2><p>Set aside money for each spending category.</p></div>
             <Button variant="default" leftSection={<Plus size={17} />} onClick={() => open('pool')}>Add pool</Button></div>
           {month.pools.length ? <div className="pool-list">
             <div className="pool-grid column-head" aria-hidden="true"><span>Pool</span><span>Allocated</span><span>Spent</span><span>Remaining</span><span /></div>
-            {month.pools.map(pool => {
-              const poolSpent = month.expenses.reduce((total, expense) => expense.poolId === pool.id ? total + expense.amount : total, 0)
+            {poolSummaries.map(pool => {
+              const poolSpent = pool.spent
               const balance = pool.allocation - poolSpent
               const Icon = pool.name === 'Food' ? Utensils : pool.name === 'Transportation' ? BusFront : Coins
               return <div className="pool-grid pool-row" key={pool.id}>

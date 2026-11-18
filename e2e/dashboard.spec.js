@@ -140,3 +140,24 @@ test('failed writes remain visible and can be retried', async ({ page }) => {
   await page.reload()
   await expect(overview(page)).toContainText('฿50.00')
 })
+
+test('charts show the selected month and update when spending changes', async ({ page }) => {
+  await page.goto(path)
+  const breakdown = page.getByRole('article', { name: 'Spending breakdown' })
+  const comparison = page.getByRole('article', { name: 'Allocated vs. spent' })
+  await expect(breakdown).toContainText('Add an expense')
+  await enterBudget(page)
+  await expect(breakdown).toContainText('100%')
+  await expect(comparison).toContainText('฿3,000.00')
+
+  await page.getByRole('button', { name: 'Add expense' }).click()
+  await dialog(page).getByLabel('Amount (THB)').fill('120')
+  await dialog(page).getByLabel('Pool', { exact: true }).selectOption({ label: 'Transportation' })
+  await dialog(page).getByRole('button', { name: 'Save' }).click()
+  await expect(breakdown.getByText('50%', { exact: true })).toHaveCount(2)
+  await expect(breakdown).toContainText('฿240.00')
+
+  await page.getByRole('button', { name: 'Next month' }).click()
+  await expect(breakdown).toContainText('Add an expense')
+  await expect(comparison).toContainText('Allocate money')
+})
