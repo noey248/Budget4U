@@ -74,6 +74,7 @@ for (const width of [360, 768, 1440]) {
   test(`keyboard, overspending and layout at ${width}px`, async ({ page }, info) => {
     await page.setViewportSize({ width, height: 950 })
     await page.goto(path)
+    await expect(page.getByRole('button', { name: 'Export' })).toBeVisible()
     await page.keyboard.press('Tab')
     await expect(page.getByRole('button', { name: 'Export' })).toBeFocused()
     await page.keyboard.press('Tab')
