@@ -1,3 +1,10 @@
+const starterPools = ['Food', 'Transportation', 'Education', 'Dormitory Rent', 'Entertainment', 'Shopping', 'Bills']
+
+export function missingStarterPools(pools) {
+  const names = new Set(pools.map(pool => pool.name.trim().toLowerCase()))
+  return starterPools.filter(name => !names.has(name.toLowerCase()))
+}
+
 export const emptyBudget = () => ({ version: 1, months: {} })
 export const validMonth = value => typeof value === 'string' && /^[1-9]\d{3}-(0[1-9]|1[0-2])$/.test(value)
 const integer = value => Number.isSafeInteger(value) && value >= 0
@@ -38,7 +45,7 @@ export function validDate(date, month) {
 export function getMonth(doc, key) {
   if (Object.hasOwn(doc.months, key)) return doc.months[key]
   const previous = Object.keys(doc.months).filter(month => month < key).sort().at(-1)
-  const names = previous ? doc.months[previous].pools.map(pool => pool.name) : ['Food', 'Transportation']
+  const names = previous ? doc.months[previous].pools.map(pool => pool.name) : starterPools
   return { income: 0, pools: names.map((name, i) => ({ id: `${key}-${i}`, name, allocation: 0 })), expenses: [] }
 }
 

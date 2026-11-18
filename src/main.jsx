@@ -6,7 +6,7 @@ import { ActionIcon, Alert, Button, MantineProvider, Modal, NativeSelect, TextIn
 import { ArrowDownToLine, ArrowDownLeft, ArrowUpRight, CalendarDays, ChevronLeft, ChevronRight, CircleAlert, Coins, Layers3, Pencil, Plus, ReceiptText, ShieldCheck, Trash2, Upload, Utensils, Wallet, BusFront } from 'lucide-react'
 import '@mantine/core/styles.css'
 import './style.css'
-import { decimal, deleteExpense, deletePool, emptyBudget, getMonth, money, parseBackup, parseMoney, saveExpense, savePool, setIncome, totals, validMonth } from './budget.js'
+import { decimal, deleteExpense, deletePool, emptyBudget, getMonth, missingStarterPools, money, parseBackup, parseMoney, saveExpense, savePool, setIncome, totals, validMonth } from './budget.js'
 import { loadBudget, writeBudget } from './storage.js'
 
 const theme = createTheme({ primaryColor: 'moss', defaultRadius: 'md', fontFamily: 'Inter, system-ui, sans-serif', colors: {
@@ -169,6 +169,17 @@ function App() {
   for (const expense of month.expenses) {
     spendingByPool.set(expense.poolId, (spendingByPool.get(expense.poolId) ?? 0) + expense.amount)
   }
+  const missingPools = missingStarterPools(month.pools)
+
+  function saveMonth(next) {
+    return persist({ ...state.data, months: { ...state.data.months, [monthKey]: next } })
+  }
+
+  function addStarterPools() {
+    const added = missingPools.map(name => ({ id: crypto.randomUUID(), name, allocation: 0 }))
+    saveMonth({ ...month, pools: [...month.pools, ...added] })
+  }
+
   const poolSummaries = month.pools.map((pool, index) => ({
     ...pool,
     spent: spendingByPool.get(pool.id) ?? 0,
@@ -233,7 +244,11 @@ function App() {
         <BudgetCharts pools={poolSummaries} spent={spent} />
         <section className="panel" id="pools" aria-labelledby="pools-heading">
           <div className="panel-head"><div><h2 id="pools-heading">Budget pools</h2><p>Set aside money for each spending category.</p></div>
-            <Button variant="default" leftSection={<Plus size={17} />} onClick={() => open('pool')}>Add pool</Button></div>
+            <div className="pool-actions">
+              {missingPools.length > 0 && <Button variant="subtle" onClick={addStarterPools}>Add starter pools</Button>}
+              <Button variant="default" leftSection={<Plus size={17} />} onClick={() => open('pool')}>Add pool</Button>
+            </div>
+          </div>
           {month.pools.length ? <div className="pool-list">
             <div className="pool-grid column-head" aria-hidden="true"><span>Pool</span><span>Allocated</span><span>Spent</span><span>Remaining</span><span /></div>
             {poolSummaries.map(pool => {
@@ -281,7 +296,7 @@ function App() {
     </main>
     {dialog?.kind === 'month' && <MonthPicker monthKey={monthKey} close={close} choose={selectMonth} />}
     {dialog && dialog.kind !== 'month' && <Editor dialog={dialog} month={month} monthKey={monthKey} close={close}
-      commit={next => persist({ ...state.data, months: { ...state.data.months, [monthKey]: next } })}
+      commit={saveMonth}
       replace={data => persist(data, true)} />}
   </>
 }

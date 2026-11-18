@@ -178,3 +178,30 @@ test('annual reporting shows year totals and lets you focus a month', async ({ p
   await page.getByRole('button', { name: 'November, income ฿10,000.00, spent ฿120.00' }).click()
   await expect(page.locator('#transactions').getByText('Lunch')).toBeVisible()
 })
+
+test('starter pools are automatic for a new budget and easy to add to an existing month', async ({ page }) => {
+  await page.goto(path)
+  const pools = page.locator('#pools')
+  const names = ['Education', 'Dormitory Rent', 'Entertainment', 'Shopping', 'Bills']
+  for (const name of names) await expect(pools.getByText(name, { exact: true })).toBeVisible()
+
+  const month = await page.evaluate(() => {
+    const now = new Date()
+    const key = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    localStorage.setItem('kanompang-ai:budget-4u', JSON.stringify({ version: 1, months: {
+      [key]: { income: 50000, pools: [{ id: 'existing', name: 'shopping', allocation: 10000 }], expenses: [] },
+    } }))
+    return key
+  })
+  await page.reload()
+  await pools.getByRole('button', { name: 'Add starter pools' }).click()
+  for (const name of names.filter(name => name !== 'Shopping')) await expect(pools.getByText(name, { exact: true })).toBeVisible()
+  const saved = await page.evaluate(key => JSON.parse(localStorage.getItem('kanompang-ai:budget-4u')).months[key], month)
+  expect(saved.pools.filter(pool => pool.name.toLowerCase() === 'shopping')).toEqual([
+    { id: 'existing', name: 'shopping', allocation: 10000 },
+  ])
+  await pools.getByRole('button', { name: 'Add pool', exact: true }).click()
+  await dialog(page).getByLabel('Pool name').fill('Travel')
+  await dialog(page).getByRole('button', { name: 'Save' }).click()
+  await expect(pools.getByText('Travel', { exact: true })).toBeVisible()
+})

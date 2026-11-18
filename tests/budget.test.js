@@ -39,8 +39,16 @@ describe('budget records', () => {
     expect(() => saveExpense(over, key, expense(over, { date: '2026-12-01' }))).toThrow()
     const moved = saveExpense(over, key, expense(over, { poolId: over.pools[1].id }))
     expect(moved.expenses).toHaveLength(1)
-    expect(deletePool(moved, over.pools[0].id).pools).toHaveLength(1)
+    expect(deletePool(moved, over.pools[0].id).pools).toHaveLength(over.pools.length - 1)
     expect(totals(deleteExpense(moved, 'meal')).spent).toBe(0)
+  })
+
+  it('starts a fresh budget with seven zero-allocation pools', () => {
+    const month = base()
+    expect(month.pools.map(pool => pool.name)).toEqual([
+      'Food', 'Transportation', 'Education', 'Dormitory Rent', 'Entertainment', 'Shopping', 'Bills',
+    ])
+    expect(month.pools.every(pool => pool.allocation === 0)).toBe(true)
   })
 
   it('copies only names from the latest earlier month', () => {
@@ -50,7 +58,7 @@ describe('budget records', () => {
     data.months['2026-10'] = { ...base(), pools: [] }
     data.months['2027-02'] = { ...base(), pools: [] }
     const december = getMonth(data, '2026-12')
-    expect(december.pools.map(pool => [pool.name, pool.allocation])).toEqual([['Groceries', 0], ['Transportation', 0]])
+    expect(december.pools.map(pool => [pool.name, pool.allocation])).toEqual(updated.pools.map(pool => [pool.name, 0]))
     expect(december.pools[0].id).not.toBe(updated.pools[0].id)
     expect(december.income).toBe(0)
     expect(december.expenses).toEqual([])

@@ -158,3 +158,8 @@ main > .mantine-Alert-root { margin: 0 0 16px; }
 .annual-table tr[data-selected] { background: #eaf0e4; }
 .annual-table button { border: 0; background: none; color: var(--green); text-decoration: underline; cursor: pointer; padding: 3px; }
 @media (max-width: 820px) { .annual-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.pool-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+@media (max-width: 680px) {
+  .pool-actions { flex-direction: column-reverse; align-items: flex-end; flex-shrink: 0; }
+}
