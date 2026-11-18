@@ -86,7 +86,15 @@ for (const width of [360, 768, 1440]) {
     await page.keyboard.press('Enter')
     await expect(page.getByText('Over budget', { exact: true })).toBeVisible()
     await expect(page.getByText('Over monthly income', { exact: true })).toBeVisible()
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
+    await expect(dialog(page)).toBeHidden()
+    const layout = await page.evaluate(() => ({
+      width: document.documentElement.scrollWidth,
+      overflowing: [...document.querySelectorAll('body *')].flatMap(element => {
+        const rect = element.getBoundingClientRect()
+        return rect.right > innerWidth + 1 ? [element.tagName + '.' + element.getAttribute('class')] : []
+      }).slice(0, 15),
+    }))
+    expect(layout.width, layout.overflowing.join(', ')).toBe(width)
     await page.screenshot({ path: info.outputPath(`ledger-${width}.png`), fullPage: true })
   })
 }

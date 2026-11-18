@@ -66,6 +66,8 @@ To edit a personal budget, use the live app's income and pool pencil buttons or 
 
 ## Publish through GitHub Actions
 
+For the first deployment, open [Settings → Pages](https://github.com/noey248/Budget4U/settings/pages) and choose **GitHub Actions** under **Build and deployment → Source**. Then open **Actions → Deploy budget 4U to Pages** and select **Run workflow** on `main`. Subsequent pushes to `main` deploy automatically.
+
 Run the tests and build first. With Python 3 available, provide a temporary `GH_TOKEN` process credential that authenticates as `noey248`. It needs access to create a public repository if absent, write repository contents and Actions workflows, configure Pages, and inspect or dispatch Actions runs. Use an interactive hidden prompt or the environment's secret injection.
 
 ```bash
