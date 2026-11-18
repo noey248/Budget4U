@@ -22,8 +22,11 @@ export function decimal(value) {
 
 const grouping = new Intl.NumberFormat('en-TH')
 export function money(value) {
-  const [whole, fraction] = decimal(Math.abs(value)).split('.')
-  return `${value < 0 ? '−' : ''}฿${grouping.format(BigInt(whole))}.${fraction}`
+  const satang = BigInt(value)
+  const amount = satang < 0n ? -satang : satang
+  const whole = amount / 100n
+  const fraction = String(amount % 100n).padStart(2, '0')
+  return `${value < 0 ? '−' : ''}฿${grouping.format(whole)}.${fraction}`
 }
 
 export function validDate(date, month) {

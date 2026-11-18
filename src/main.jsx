@@ -1,3 +1,4 @@
+import { AnnualReport, MonthInsights, SpendingDetails } from './Reports.jsx'
 import { BudgetCharts, poolColors } from './BudgetCharts.jsx'
 import React, { useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
@@ -189,17 +190,25 @@ function App() {
         <Button variant="default" leftSection={<Upload size={16} />} onClick={() => backupInput.current.click()}>Restore</Button>
         <input ref={backupInput} type="file" accept=".json,application/json" hidden onChange={readBackup} />
       </div>
-    </div></header>
+    </div>
+      <nav className="shell section-nav" aria-label="Budget sections">
+        <a href="#overview">Overview</a><a href="#pools">Budget pools</a>
+        <a href="#transactions">Transactions</a><a href="#annual">Annual report</a>
+      </nav>
+    </header>
     <main className="shell">
-      <section className="intro" aria-labelledby="title">
-        <div><h1 id="title">Monthly budget</h1><p>Plan your money and track where it goes.</p></div>
-        <div className="month-control">
+      <section className="intro" id="overview" aria-labelledby="title">
+        <div><h1 id="title" tabIndex={-1}>Monthly budget</h1><p>Plan your money and track where it goes.</p></div>
+        <div className="intro-tools"><div className="month-control">
           <ActionIcon variant="subtle" aria-label="Previous month" onClick={() => shiftMonth(-1)}><ChevronLeft size={18} /></ActionIcon>
           <Button className="month-field" variant="subtle" onClick={() => open('month')} leftSection={<CalendarDays size={17} />}
             aria-label={`Budget month, ${displayDate(monthKey + '-01', { month: 'long', year: 'numeric' })}`}>
             {displayDate(monthKey + '-01', { month: 'long', year: 'numeric' })}
           </Button>
           <ActionIcon variant="subtle" aria-label="Next month" onClick={() => shiftMonth(1)}><ChevronRight size={18} /></ActionIcon>
+        </div>
+          <Button leftSection={<Plus size={19} />} disabled={!month.pools.length || corrupt || state.status === 'unavailable'}
+            onClick={() => open('expense')}>Add expense</Button>
         </div>
       </section>
       {notice && <Alert color="red" role="alert" title="Restore failed">{notice}</Alert>}
@@ -220,8 +229,9 @@ function App() {
             {amount < 0 && <div className="negative warning"><CircleAlert size={14} /> Over monthly income</div>}
           </article>)}
         </section>
+        <MonthInsights month={month} pools={poolSummaries} spent={spent} monthKey={monthKey} months={state.data.months} today={localDate()} />
         <BudgetCharts pools={poolSummaries} spent={spent} />
-        <section className="panel" aria-labelledby="pools-heading">
+        <section className="panel" id="pools" aria-labelledby="pools-heading">
           <div className="panel-head"><div><h2 id="pools-heading">Budget pools</h2><p>Set aside money for each spending category.</p></div>
             <Button variant="default" leftSection={<Plus size={17} />} onClick={() => open('pool')}>Add pool</Button></div>
           {month.pools.length ? <div className="pool-list">
@@ -244,9 +254,9 @@ function App() {
             })}
           </div> : <div className="empty"><Layers3 size={24} /><strong>No pools yet</strong><p>Add a pool to allocate income and track expenses.</p></div>}
         </section>
-        <section className="panel history" aria-labelledby="history-heading">
+        <section className="panel history" id="transactions" aria-labelledby="history-heading">
           <div className="panel-head"><div><h2 id="history-heading">Spending history</h2><p>See what you’ve spent this month.</p></div>
-            <Button leftSection={<Plus size={19} />} disabled={!month.pools.length} onClick={() => open('expense')}>Add expense</Button></div>
+          </div>
           {expenseList.length ? expenseList.map(expense => {
             const pool = month.pools.find(item => item.id === expense.poolId)
             return <div className="expense-row" key={expense.id}><span className="expense-icon"><ReceiptText size={18} /></span>
@@ -261,6 +271,11 @@ function App() {
           }) : <div className="empty"><div className="empty-icon"><ReceiptText size={24} /></div><strong>No expenses yet</strong>
             <p>{month.pools.length ? 'Add an expense to see it here.' : 'Create a budget pool to start recording expenses.'}</p></div>}
         </section>
+        <SpendingDetails month={month} />
+        <AnnualReport months={state.data.months} monthKey={monthKey} selectMonth={key => {
+          selectMonth(key)
+          document.getElementById('title').focus()
+        }} />
       </fieldset>
       <footer><ShieldCheck size={15} /> Your budget data stays in this browser.</footer>
     </main>
